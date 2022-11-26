@@ -36,28 +36,14 @@ public class CustomerHandler implements Runnable {
                             writer.println(barista.createOrder(customerName, Integer.parseInt(substrings[1]), Integer.parseInt(substrings[2])));
                             break;
                         case "status":
-                            List<String> orderList = barista.getOrders(customerName);
-                            if (orderList.size() == 0) {
-                                writer.println("No orders found for " + customerName);
-                            } else {
-                                for (String order : orderList) {
-                                    writer.println(order);
-                                }
+                            String[] tempArray = barista.orderStatus(customerName);
+                            writer.println(tempArray.length);
+                            for (String s : tempArray) {
+                                writer.println(s);
                             }
                             break;
                         case "debug":
-                            if(substrings[1].toLowerCase().compareTo("all") == 0) {
-                                List<String> allOrders = barista.DEBUG_ALL_ORDERS();
-                                writer.println(allOrders.size());
-                                if (allOrders.size() == 0) {
-                                    writer.println("No orders found");
-                                } else {
-                                    for (String order : allOrders) {
-                                        writer.println(order);
-                                    }
-                                }
-                            }
-                            else if(substrings[1].toLowerCase().compareTo("trayed") == 0) {
+                            if(substrings[1].toLowerCase().compareTo("trayed") == 0) {
                                 List<Drink> temp = barista.DEBUG_trayed();
                                 writer.println(temp.size());
                                 if (temp.size() == 0) {
@@ -92,8 +78,8 @@ public class CustomerHandler implements Runnable {
                             }
                             break;
                         case "exit":
-                            // TODO: add exit functionality as per the assignment
-                            writer.println("Goodbye");
+                            socket.close();
+                            //writer.println("Goodbye");
                             return;
                     }
                 }

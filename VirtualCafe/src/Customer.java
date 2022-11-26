@@ -52,8 +52,10 @@ public class Customer{
                             System.out.println("Order created for " + customerName);
                             break;
                         case "status":
-                            customer.getOrderStatus();
-                            System.out.println("Order status for " + customerName);
+                            for (String status : customer.getOrderStatus()) {
+                                System.out.println(status);
+                            }
+                            //System.out.println("Order status for " + customerName);
                             break;
                         case "debug":
                             if (substrings[1].toLowerCase().compareTo("all") == 0) {
@@ -80,6 +82,10 @@ public class Customer{
                                 System.out.println("Invalid debug command");
                             }
                             
+                            break;
+                        case "exit":
+                            customer.exit();
+                            System.exit(0);
                             break;
                         default:
                             System.out.println("Invalid command");

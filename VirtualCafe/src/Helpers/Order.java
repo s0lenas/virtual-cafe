@@ -78,6 +78,62 @@ public class Order implements Runnable{
         this.complete = complete;
     }
 
+    // Overriding the toString method for printing out orders
+    @Override
+    public String toString() {
+        String orderString = "Order for " + customerName + ":\n";
+        //List<String> orderString = new ArrayList<>();
+        //orderString.add("Order for " + customerName + ":");
+
+        int numCoffeeWaiting, numTeaWaiting, numCoffeeBrewing, numTeaBrewing, numCoffeeTray, numTeaTray;
+        numCoffeeWaiting = numTeaWaiting = numCoffeeBrewing = numTeaBrewing = numCoffeeTray = numTeaTray = 0;
+
+        for(Drink drink : this.drinks) {
+            if (drink.getDrinkStatus() == DrinkStatus.Waiting) {
+                if (drink.getDrinkType() == DrinkType.Coffee) numCoffeeWaiting++;
+                else numTeaWaiting++;
+            } else if (drink.getDrinkStatus() == DrinkStatus.Brewing) {
+                if (drink.getDrinkType() == DrinkType.Coffee) numCoffeeBrewing++;
+                else numTeaBrewing++;
+            } else if (drink.getDrinkStatus() == DrinkStatus.Trayed) {
+                if (drink.getDrinkType() == DrinkType.Coffee) numCoffeeTray++;
+                else numTeaTray++;
+            }
+        }
+
+        // if (numCoffeeWaiting > 0 && numTeaWaiting > 0) orderString.add("- " + numCoffeeWaiting + " coffee(s) and " + numTeaWaiting + " tea(s) currently in waiting area");
+        // else if (numCoffeeWaiting > 0) orderString.add("- " + numCoffeeWaiting + " coffee(s) currently in waiting area");
+        // else if (numTeaWaiting > 0) orderString.add("- " + numTeaWaiting + " tea(s) currently in waiting area");
+        // else orderString.add("- No drinks currently in waiting area");
+
+        // if (numCoffeeBrewing > 0 && numTeaBrewing > 0) orderString.add("- " + numCoffeeBrewing + " coffee(s) and " + numTeaBrewing + " tea(s) currently being prepared");
+        // else if (numCoffeeBrewing > 0) orderString.add("- " + numCoffeeBrewing + " coffee(s) currently being prepared");
+        // else if (numTeaBrewing > 0) orderString.add("- " + numTeaBrewing + " tea(s) currently being prepared");
+        // else orderString.add("- No drinks currently being prepared");
+
+        // if (numCoffeeTray > 0 && numTeaTray > 0) orderString.add("- " + numCoffeeTray + " coffee(s) and " + numTeaTray + " tea(s) currently on tray");
+        // else if (numCoffeeTray > 0) orderString.add("- " + numCoffeeTray + " coffee(s) currently on tray");
+        // else if (numTeaTray > 0) orderString.add("- " + numTeaTray + " tea(s) currently on tray");
+        // else orderString.add("- No drinks currently on tray");
+
+        if (numCoffeeWaiting > 0 && numTeaWaiting > 0) orderString += "- " + numCoffeeWaiting + " coffee(s) and " + numTeaWaiting + " tea(s) currently in waiting area\n";
+        else if (numCoffeeWaiting > 0) orderString += "- " + numCoffeeWaiting + " coffee(s) currently in waiting area\n";
+        else if (numTeaWaiting > 0) orderString += "- " + numTeaWaiting + " tea(s) currently in waiting area\n";
+        else orderString += "- No drinks currently in waiting area\n";
+
+        if (numCoffeeBrewing > 0 && numTeaBrewing > 0) orderString += "- " + numCoffeeBrewing + " coffee(s) and " + numTeaBrewing + " tea(s) currently being prepared\n";
+        else if (numCoffeeBrewing > 0) orderString += "- " + numCoffeeBrewing + " coffee(s) currently being prepared\n";
+        else if (numTeaBrewing > 0) orderString += "- " + numTeaBrewing + " tea(s) currently being prepared\n";
+        else orderString += "- No drinks currently being prepared\n";
+
+        if (numCoffeeTray > 0 && numTeaTray > 0) orderString += "- " + numCoffeeTray + " coffee(s) and " + numTeaTray + " tea(s) currently on tray";
+        else if (numCoffeeTray > 0) orderString += "- " + numCoffeeTray + " coffee(s) currently on tray";
+        else if (numTeaTray > 0) orderString += "- " + numTeaTray + " tea(s) currently on tray";
+        else orderString += "- No drinks currently on tray";
+
+        return orderString;
+    }
+
     @Override
     public void run() {
         // while(!complete) {

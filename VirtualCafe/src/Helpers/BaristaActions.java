@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 public class BaristaActions implements Runnable{
 
+    // Active orders
     private Map<String, Order> orders = new TreeMap<>();
 
     // Waiting area
@@ -22,47 +23,45 @@ public class BaristaActions implements Runnable{
 
     // Tray area
     private List<Drink> trayArea = new ArrayList<>();
-
-    private List<Drink> drinks = new ArrayList<>();
-
     
     public String createOrder(String customerName, int numCoffee, int numTea) {
 
         // If order by the customer already exists, then just add drinks to the existing order
         // otherwise create a new order
-
-        // TODO: finish functionality for cases where order already exists
+        Order order = new Order(customerName, numCoffee, numTea);
         if (orders.containsKey(customerName)) {
-            if (numCoffee > 0) orders.get(customerName).addDrink(numCoffee, DrinkType.Coffee);
-            if (numTea > 0) orders.get(customerName).addDrink(numTea, DrinkType.Tea);
+            if (numCoffee > 0) {
+                orders.get(customerName).addDrink(numCoffee, DrinkType.Coffee);
+                for (int i = 0; i < numCoffee; i++) waitingArea.add(new Drink(order, DrinkType.Coffee));
+
+                System.out.println("Added " + numCoffee + " coffee(s) to " + customerName + "'s order");
+            }
+            if (numTea > 0) {
+                orders.get(customerName).addDrink(numTea, DrinkType.Tea);
+                for (int i = 0; i < numTea; i++) waitingArea.add(new Drink(order, DrinkType.Tea));
+
+                System.out.println("Added " + numTea + " tea(s) to " + customerName + "'s order");
+            }
         } else {
-            Order order = new Order(customerName, numCoffee, numTea);
             orders.put(customerName, order);
+            System.out.println("DEBUG: Order created for " + customerName);
             waitingArea.addAll(order.getDrinks());
-            drinks.addAll(order.getDrinks());
         }
         
-        //return "Order " + numCoffee + " coffee " + numTea + " tea created for " + customerName;
         return "Order created";
         
     }
 
-    public List<String> getOrders(String customerName) {
-        List<String> orderList = new ArrayList<>();
-        for (Order order : orders.values()) {
-            if (order.getCustomerName().compareTo(customerName) == 0) {
-
-            }
+    // Getting order status for a specified customer
+    public String[] orderStatus(String customerName) {
+        String[] lines = new String[4];
+        // In case of an exception, returning a single line with a message to user.
+        try { lines = orders.get(customerName).toString().split("\n");
+        } catch (Exception e) { 
+            String[] error = {"No orders found for " + customerName};
+            return error; 
         }
-        return orderList;
-    }
-
-    public List<String> DEBUG_ALL_ORDERS() {
-        List<String> orderList = new ArrayList<>();
-        for (Order order : orders.values()) {
-            //orderList.addAll(order.getDrinks())
-        }
-        return orderList;
+        return lines;
     }
 
     public List<Drink> DEBUG_trayed() {
@@ -87,7 +86,6 @@ public class BaristaActions implements Runnable{
             // If there are drinks in the waiting area, start brewing in respective tea or coffee areas
             synchronized (this) {
                 if (waitingArea.size() > 0) {
-                    //System.out.println("bum");
                     for(int d = 0; d < waitingArea.size(); d++) {
                         Drink drink = waitingArea.get(d);
                         if (drink.getDrinkType() == DrinkType.Coffee) {
@@ -120,7 +118,6 @@ public class BaristaActions implements Runnable{
                 }
                 // Check if any of the brewing threads are done; if so, move the drink to the tray area and remove from brewing area
                 if (brewingArea.size() > 0) {
-                    //System.out.println("Brewing area: " + brewingArea.size());
                     for (int i = 0; i < brewingArea.size(); i++) {
                         Drink drink = brewingArea.get(i);
                         if (drink.getDrinkStatus() == DrinkStatus.Trayed) {
@@ -138,14 +135,13 @@ public class BaristaActions implements Runnable{
                             Order order = (Order) orders.values().toArray()[j];
                             if (order.getCustomerName().compareTo(drink.getDrinkOwner()) == 0) {
                                 order.addToTray(drink);
-                                order.getDrinks().remove(drink);
                                 trayArea.remove(drink);
                             }
-                            if (order.getDrinks().size() == 0) {
-                                System.out.println("Order completed");
+                            if (order.getTray().size() == order.getDrinks().size()) {
                                 order.setComplete(true);
                                 orders.remove(order.getCustomerName());
-                                System.out.println("Order map size: " + orders.size());
+                                System.out.println("Order for " + order.getCustomerName() + " completed");
+                                System.out.println("DEBUG: " + orders.size() + " orders remaining");
                             }
                         }
                     }

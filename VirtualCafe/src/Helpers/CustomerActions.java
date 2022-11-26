@@ -31,18 +31,18 @@ public class CustomerActions implements AutoCloseable {
         System.out.println(line);
     }
 
-    public List<String> getOrderStatus() {
+    public String[] getOrderStatus() {
         writer.println("STATUS");
-        String line = reader.nextLine();
-        int numOrders = Integer.parseInt(line);
-        List<String> orderList = new ArrayList<String>();
 
-        for(int i = 0; i < numOrders; i++) {
-            line = reader.nextLine();
-            orderList.add(line);
+        String line = reader.nextLine();
+        int numLines = Integer.parseInt(line);
+
+        String[] status = new String[numLines];
+
+        for (int i = 0; i < status.length; i++) {
+            status[i] = (reader.nextLine());
         }
-        
-        return orderList;
+        return status;
     }
 
     public List<String> DEBUG_ALL_ORDERS() {
@@ -107,6 +107,10 @@ public class CustomerActions implements AutoCloseable {
         }
         
         return orderList;
+    }
+
+    public void exit() {
+        writer.println("EXIT");
     }
 
     @Override
