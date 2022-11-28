@@ -19,6 +19,7 @@ public class Drink implements Runnable {
     private DrinkStatus drinkStatus;
     private static int brewTimeTea = 30000; // 30 seconds
     private static int brewTimeCoffee = 45000; // 45 seconds
+    private boolean stop = false;
     
     public Drink(Order order, DrinkType drinkType) {
         this.order = order;
@@ -42,6 +43,15 @@ public class Drink implements Runnable {
     public DrinkStatus getDrinkStatus() {
         return drinkStatus;
     }
+
+    // public boolean isRunning() {
+    //     return !stop;
+    // }
+
+    // public void interrupt() {
+    //     stop = true;
+    //     this.interrupt();
+    // }
     
     // public void setBrewTime(int brewTime) {
     //     Drink.brewTime = brewTime;
@@ -57,10 +67,7 @@ public class Drink implements Runnable {
                 Thread.sleep(brewTimeCoffee);
             }
             drinkStatus = DrinkStatus.Trayed;
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        } catch (InterruptedException e) {}
     }
 
 }

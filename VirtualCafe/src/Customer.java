@@ -52,10 +52,7 @@ public class Customer{
                             System.out.println("Order created for " + customerName);
                             break;
                         case "status":
-                            for (String status : customer.getOrderStatus()) {
-                                System.out.println(status);
-                            }
-                            //System.out.println("Order status for " + customerName);
+                            for (String status : customer.getOrderStatus()) System.out.println(status);
                             break;
                         case "debug":
                             if (substrings[1].toLowerCase().compareTo("all") == 0) {

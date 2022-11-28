@@ -11,7 +11,6 @@ public class CustomerHandler implements Runnable {
     private BaristaActions barista;
 
     public CustomerHandler(Socket socket, BaristaActions barista) {
-        // TODO Auto-generated constructor stub
         this.socket = socket;
         this.barista = barista;
     }
@@ -78,6 +77,7 @@ public class CustomerHandler implements Runnable {
                             }
                             break;
                         case "exit":
+                            barista.exitCommand(customerName);
                             socket.close();
                             //writer.println("Goodbye");
                             return;

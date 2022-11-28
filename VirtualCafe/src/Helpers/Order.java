@@ -8,9 +8,6 @@ public class Order implements Runnable{
     private final String customerName;
     private final int numCoffee;
     private final int numTea;
-    private final int coffeeBrewTime = 45000; // 45 seconds
-    private final int teaBrewTime = 30000; // 30 seconds
-
     private boolean complete;
 
     private List<Drink> drinks = new ArrayList<>();
@@ -36,19 +33,33 @@ public class Order implements Runnable{
                 drinks.add(tea);
             }
         }
-        // TODO handle enums
     }
 
     public String getCustomerName() {
         return customerName;
     }
 
+    // To account for potential changes in the order beyond initial creation,
+    // this method counts drinks within the list, rather than simply returning
+    // the number set in the constructor of the class. Same goes for getNumTea() method
     public int getNumCoffee() {
-        return numCoffee;
+        int count = 0;
+        for (Drink drink : drinks) {
+            if (drink.getDrinkType() == DrinkType.Coffee) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public int getNumTea() {
-        return numTea;
+        int count = 0;
+        for (Drink drink : drinks) {
+            if (drink.getDrinkType() == DrinkType.Tea) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public List<Drink> getDrinks() {
@@ -78,13 +89,22 @@ public class Order implements Runnable{
         this.complete = complete;
     }
 
+    public String orderCompleteMessage() {
+        String msg = "Order delivered to " + customerName + " (";
+        int completeCoffee = getNumCoffee();
+        int completeTea = getNumTea();
+        
+        if (completeCoffee > 0 && completeTea == 0) msg += completeCoffee + " coffee(s))";
+        else if (completeCoffee == 0 && completeTea > 0) msg += completeTea + " tea(s))";
+        else msg += completeCoffee + " coffee(s) and " + completeTea + " tea(s))";
+
+        return msg;
+    }
+
     // Overriding the toString method for printing out orders
     @Override
     public String toString() {
         String orderString = "Order for " + customerName + ":\n";
-        //List<String> orderString = new ArrayList<>();
-        //orderString.add("Order for " + customerName + ":");
-
         int numCoffeeWaiting, numTeaWaiting, numCoffeeBrewing, numTeaBrewing, numCoffeeTray, numTeaTray;
         numCoffeeWaiting = numTeaWaiting = numCoffeeBrewing = numTeaBrewing = numCoffeeTray = numTeaTray = 0;
 
@@ -100,21 +120,6 @@ public class Order implements Runnable{
                 else numTeaTray++;
             }
         }
-
-        // if (numCoffeeWaiting > 0 && numTeaWaiting > 0) orderString.add("- " + numCoffeeWaiting + " coffee(s) and " + numTeaWaiting + " tea(s) currently in waiting area");
-        // else if (numCoffeeWaiting > 0) orderString.add("- " + numCoffeeWaiting + " coffee(s) currently in waiting area");
-        // else if (numTeaWaiting > 0) orderString.add("- " + numTeaWaiting + " tea(s) currently in waiting area");
-        // else orderString.add("- No drinks currently in waiting area");
-
-        // if (numCoffeeBrewing > 0 && numTeaBrewing > 0) orderString.add("- " + numCoffeeBrewing + " coffee(s) and " + numTeaBrewing + " tea(s) currently being prepared");
-        // else if (numCoffeeBrewing > 0) orderString.add("- " + numCoffeeBrewing + " coffee(s) currently being prepared");
-        // else if (numTeaBrewing > 0) orderString.add("- " + numTeaBrewing + " tea(s) currently being prepared");
-        // else orderString.add("- No drinks currently being prepared");
-
-        // if (numCoffeeTray > 0 && numTeaTray > 0) orderString.add("- " + numCoffeeTray + " coffee(s) and " + numTeaTray + " tea(s) currently on tray");
-        // else if (numCoffeeTray > 0) orderString.add("- " + numCoffeeTray + " coffee(s) currently on tray");
-        // else if (numTeaTray > 0) orderString.add("- " + numTeaTray + " tea(s) currently on tray");
-        // else orderString.add("- No drinks currently on tray");
 
         if (numCoffeeWaiting > 0 && numTeaWaiting > 0) orderString += "- " + numCoffeeWaiting + " coffee(s) and " + numTeaWaiting + " tea(s) currently in waiting area\n";
         else if (numCoffeeWaiting > 0) orderString += "- " + numCoffeeWaiting + " coffee(s) currently in waiting area\n";
@@ -136,15 +141,5 @@ public class Order implements Runnable{
 
     @Override
     public void run() {
-        // while(!complete) {
-        //     for (Drink drink : drinks) {
-        //         if (drink.getDrinkStatus() == DrinkStatus.Trayed) {
-                    
-        //         }
-        //     }
-        // }
     }
-
-    // Maybe a list for drinks within the order?
-    // Maybe a list for statuses of individual drinks within the order?
 }

@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-// NOTES: can use override toString for drinks or orders to print them in readable format
 // NOTES: takes 90s to complete order of 4 coffees and 4 teas
+// NOTES: can maybe add time it took to complete specific order
 
 public class BaristaActions implements Runnable{
+
+    private int stateChecker = 0;
+    // Active customers in cafe
+    private Map<String, Order> customers = new TreeMap<>(); // For finding current customers in cafe. Values only removed when customer leaves cafe
 
     // Active orders
     private Map<String, Order> orders = new TreeMap<>();
@@ -42,10 +46,13 @@ public class BaristaActions implements Runnable{
 
                 System.out.println("Added " + numTea + " tea(s) to " + customerName + "'s order");
             }
+            cafeStatusUpdate();
         } else {
             orders.put(customerName, order);
+            customers.put(customerName, order);
             System.out.println("DEBUG: Order created for " + customerName);
             waitingArea.addAll(order.getDrinks());
+            cafeStatusUpdate();
         }
         
         return "Order created";
@@ -62,6 +69,69 @@ public class BaristaActions implements Runnable{
             return error; 
         }
         return lines;
+    }
+
+    public void exitCommand(String customerName) {
+        orders.remove(customerName);
+        customers.remove(customerName);
+        System.out.println("Order for " + customerName + " has been removed");
+        for (int i = 0; i < waitingArea.size(); i++) {
+            if (waitingArea.get(i).getOrder().getCustomerName().equals(customerName)) {
+                waitingArea.remove(i);
+                i--;
+            }
+        }
+        for (int i = 0; i < brewingArea.size(); i++) {
+            if (brewingArea.get(i).getOrder().getCustomerName().equals(customerName)) {
+                brewingArea.remove(i);
+                i--;
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            if (brewingCoffee[i] != null && brewingCoffee[i].getName().equals(customerName)) {
+                brewingCoffee[i].interrupt();
+                brewingCoffee[i] = null;
+            }
+            if (brewingTea[i] != null && brewingTea[i].getName().equals(customerName)) {
+                brewingTea[i].interrupt();
+                brewingTea[i] = null;
+            }
+        }
+        for (int i = 0; i < trayArea.size(); i++) {
+            if (trayArea.get(i).getOrder().getCustomerName().equals(customerName)) {
+                trayArea.remove(i);
+                i--;
+            }
+        }
+        cafeStatusUpdate();
+    }
+
+    private void cafeStatusUpdate() {
+        System.out.println("\nNumber of clients in cafe: " + customers.size());
+        System.out.println("Number of clients waiting for orders: " + orders.size());
+
+        int numCoffee = 0;
+        int numTea = 0;
+
+        String status = "Waiting area: ";
+        for (Drink drink : waitingArea) {
+            if (drink.getDrinkType() == DrinkType.Coffee) numCoffee++;
+            else numTea++;
+        }
+        status += numCoffee + " coffee(s) and " + numTea + " tea(s)";
+        numCoffee = numTea = 0;
+        for (Drink drink : brewingArea) {
+            if (drink.getDrinkType() == DrinkType.Coffee) numCoffee++;
+            else numTea++;
+        }
+        status += "\nBrewing area: " + numCoffee + " coffee(s) and " + numTea + " tea(s)";
+        numCoffee = numTea = 0;
+        for (Drink drink : trayArea) {
+            if (drink.getDrinkType() == DrinkType.Coffee) numCoffee++;
+            else numTea++;
+        }
+        status += "\nTray area: " + numCoffee + " coffee(s) and " + numTea + " tea(s)";
+        System.out.println(status + "\n");
     }
 
     public List<Drink> DEBUG_trayed() {
@@ -92,11 +162,14 @@ public class BaristaActions implements Runnable{
                             // Previously used enhanced for loop, but causes concurrent modification exception due to internal iterator
                             for (int i = 0; i < brewingCoffee.length; i++) {
                                 if (brewingCoffee[i] == null || !brewingCoffee[i].isAlive()) {
-                                    brewingCoffee[i] = new Thread(drink);
+                                    Thread coffee = new Thread(drink);
+                                    brewingCoffee[i] = coffee;
                                     brewingCoffee[i].start();
+                                    brewingCoffee[i].setName(drink.getDrinkOwner());
                                     brewingArea.add(drink);
                                     System.out.println("Brewing " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                                     waitingArea.remove(drink);
+                                    cafeStatusUpdate();
                                     break;
                                 }
                             }
@@ -104,11 +177,14 @@ public class BaristaActions implements Runnable{
                         } else if (drink.getDrinkType() == DrinkType.Tea) {
                             for (int i = 0; i < brewingTea.length; i++) {
                                 if (brewingTea[i] == null || !brewingTea[i].isAlive()) {
-                                    brewingTea[i] = new Thread(drink);
+                                    Thread tea = new Thread(drink);
+                                    brewingTea[i] = tea;
                                     brewingTea[i].start();
+                                    brewingCoffee[i].setName(drink.getDrinkOwner());
                                     brewingArea.add(drink);
                                     System.out.println("Brewing " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                                     waitingArea.remove(drink);
+                                    cafeStatusUpdate();
                                     break;
                                 }
                             }
@@ -124,6 +200,7 @@ public class BaristaActions implements Runnable{
                             trayArea.add(drink);
                             System.out.println("Trayed " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                             brewingArea.remove(drink);
+                            cafeStatusUpdate();
                         }
                     }
                 }
@@ -135,13 +212,16 @@ public class BaristaActions implements Runnable{
                             Order order = (Order) orders.values().toArray()[j];
                             if (order.getCustomerName().compareTo(drink.getDrinkOwner()) == 0) {
                                 order.addToTray(drink);
-                                trayArea.remove(drink);
+                                cafeStatusUpdate();
+                                //trayArea.remove(drink);
+                                
                             }
                             if (order.getTray().size() == order.getDrinks().size()) {
                                 order.setComplete(true);
                                 orders.remove(order.getCustomerName());
-                                System.out.println("Order for " + order.getCustomerName() + " completed");
-                                System.out.println("DEBUG: " + orders.size() + " orders remaining");
+                                trayArea.remove(drink);
+                                System.out.println(order.orderCompleteMessage());
+                                cafeStatusUpdate();
                             }
                         }
                     }
