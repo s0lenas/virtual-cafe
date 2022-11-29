@@ -33,7 +33,7 @@ public class Customer{
                                     customer.createOrder(0, numDrink);
 
                                 } else {
-                                    System.out.println("Invalid drink type");
+                                    System.out.println("Incorrect drink type or number format");
                                 }
                             }
                             else if (substrings.length > 2) {
@@ -47,9 +47,12 @@ public class Customer{
                                         numTea = Integer.parseInt(substrings[i-1]);
                                     }
                                 }
-                                customer.createOrder(numCoffee, numTea);
+                                if (numCoffee > 0 || numTea > 0) {
+                                    customer.createOrder(numCoffee, numTea);
+                                } else {
+                                    System.out.println("Incorrect drink type or number format");
+                                }
                             }
-                            System.out.println("Order created for " + customerName);
                             break;
                         case "status":
                             for (String status : customer.getOrderStatus()) System.out.println(status);

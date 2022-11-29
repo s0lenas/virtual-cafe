@@ -82,6 +82,15 @@ public class Order implements Runnable{
     }
 
     public boolean isComplete() {
+        int count = 0;
+        for (int i = 0; i < drinks.size(); i++) {
+            if (drinks.get(i).getDrinkStatus() == DrinkStatus.Trayed) {
+                count++;
+            }
+            if (count == drinks.size()) {
+                complete = true;
+            }
+        }
         return complete;
     }
 
@@ -89,8 +98,8 @@ public class Order implements Runnable{
         this.complete = complete;
     }
 
-    public String orderCompleteMessage() {
-        String msg = "Order delivered to " + customerName + " (";
+    public String orderMessage() {
+        String msg = "";
         int completeCoffee = getNumCoffee();
         int completeTea = getNumTea();
         

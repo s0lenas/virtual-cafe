@@ -30,9 +30,10 @@ public class CustomerHandler implements Runnable {
                 while(true) {
                     String command = scanner.nextLine();
                     String[] substrings = command.split(" ");
+                    
                     switch (substrings[0].toLowerCase()) {
                         case "order":
-                            writer.println(barista.createOrder(customerName, Integer.parseInt(substrings[1]), Integer.parseInt(substrings[2])));
+                            barista.createOrder(customerName, Integer.parseInt(substrings[1]), Integer.parseInt(substrings[2]));
                             break;
                         case "status":
                             String[] tempArray = barista.orderStatus(customerName);
