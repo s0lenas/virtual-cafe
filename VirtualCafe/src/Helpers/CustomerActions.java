@@ -2,8 +2,6 @@ package Helpers;
 
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class CustomerActions implements AutoCloseable {
@@ -12,6 +10,9 @@ public class CustomerActions implements AutoCloseable {
     private final Scanner reader;
     private final PrintWriter writer;
 
+    // This is the constructor for the CustomerActions class. It creates a new socket and connects to
+    // the server. It then creates a reader and writer for the socket. It then sends the customer name
+    // to the server and waits for a response. If the response is not "success" it throws an exception.
     public CustomerActions(String customerName) throws Exception {
         Socket socket = new Socket("localhost", port);
         reader = new Scanner(socket.getInputStream());
@@ -20,96 +21,28 @@ public class CustomerActions implements AutoCloseable {
         writer.println(customerName);
 
         String line =  reader.nextLine();
-        if (line.trim().compareToIgnoreCase("success") != 0) {
-            throw new Exception(line);
-        }
+        if (line.trim().compareToIgnoreCase("success") != 0) throw new Exception(line);
     }
 
-    public void createOrder(int numCoffee, int numTea) {
-        writer.println("ORDER " + numCoffee + " " + numTea);
-    }
+    // Sends an "ORDER" command to the CustomerHandler class.
+    public void createOrder(int numCoffee, int numTea) { writer.println("ORDER " + numCoffee + " " + numTea); }
 
+    // Sends a "STATUS" command to the CustomerHandler class.
     public String[] getOrderStatus() {
         writer.println("STATUS");
 
         String line = reader.nextLine();
-        int numLines = Integer.parseInt(line);
+        int numLines = Integer.parseInt(line); // The first line is the number of lines to read.
 
-        String[] status = new String[numLines];
+        String[] status = new String[numLines]; // Creating an array to store the status.
 
-        for (int i = 0; i < status.length; i++) {
-            status[i] = (reader.nextLine());
-        }
+        for (int i = 0; i < status.length; i++) status[i] = (reader.nextLine()); // Reading the status message line by line.
+
         return status;
     }
 
-    public List<String> DEBUG_ALL_ORDERS() {
-        writer.println("DEBUG ALL");
-
-        String line = reader.nextLine();
-        int numOrders = Integer.parseInt(line);
-        
-        List<String> orderList = new ArrayList<String>();
-
-        for(int i = 0; i < numOrders; i++) {
-            line = reader.nextLine();
-            orderList.add(line);
-        }
-        
-        return orderList;
-    }
-
-    public List<String> DEBUG_trayed() {
-        writer.println("DEBUG TRAYED");
-
-        String line = reader.nextLine();
-        int numOrders = Integer.parseInt(line);
-        
-        List<String> orderList = new ArrayList<String>();
-
-        for(int i = 0; i < numOrders; i++) {
-            line = reader.nextLine();
-            orderList.add(line);
-        }
-        
-        return orderList;
-    }
-
-    public List<String> DEBUG_waiting() {
-        writer.println("DEBUG WAITING");
-
-        String line = reader.nextLine();
-        int numOrders = Integer.parseInt(line);
-        
-        List<String> orderList = new ArrayList<String>();
-
-        for(int i = 0; i < numOrders; i++) {
-            line = reader.nextLine();
-            orderList.add(line);
-        }
-        
-        return orderList;
-    }
-
-    public List<String> DEBUG_brewing() {
-        writer.println("DEBUG BREWING");
-
-        String line = reader.nextLine();
-        int numOrders = Integer.parseInt(line);
-        
-        List<String> orderList = new ArrayList<String>();
-
-        for(int i = 0; i < numOrders; i++) {
-            line = reader.nextLine();
-            orderList.add(line);
-        }
-        
-        return orderList;
-    }
-
-    public void exit() {
-        writer.println("EXIT");
-    }
+    // Sends an "EXIT" command to the CustomerHandler class.
+    public void exit() { writer.println("EXIT"); }
 
     @Override
     public void close() throws Exception {

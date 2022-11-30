@@ -23,14 +23,12 @@ public class Barista {
             baristaThread.start();
 
             System.out.println("Barista is ready to take orders");
-            // This is the main loop of the server. It waits for a client to connect, and then creates
-            // a new thread to handle the client.
+            
+            // Waiting for customers to connect. Then creating a new handler thread for each customer.
             while (true) {
                 Socket socket = serverSocket.accept();
                 new Thread(new CustomerHandler(socket, barista)).start();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

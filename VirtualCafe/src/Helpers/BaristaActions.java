@@ -1,18 +1,12 @@
 package Helpers;
 
-import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-// NOTES: takes 90s to complete order of 4 coffees and 4 teas
-// NOTES: can maybe add time it took to complete specific order
-
 public class BaristaActions implements Runnable {
 
-    private int stateChecker = 0;
     // Active customers in cafe
     private Map<String, Order> customers = new TreeMap<>(); // For finding current customers in cafe. Values only removed when customer leaves cafe
 
@@ -30,31 +24,34 @@ public class BaristaActions implements Runnable {
     // Tray area
     private List<Drink> trayArea = new ArrayList<>();
     
-    public void createOrder(String customerName, int numCoffee, int numTea) {
-
+    // Method for creating a new order
+    public synchronized void createOrder(String customerName, int numCoffee, int numTea) {
         // If order by the customer already exists, then just add drinks to the existing order
-        // otherwise create a new order
-        //Order order = new Order(customerName, numCoffee, numTea);
+        // otherwise create a new order.
         if (orders.containsKey(customerName)) {
             if (numCoffee > 0) {
-                orders.get(customerName).addDrink(numCoffee, DrinkType.Coffee);
-                for (int i = 0; i < numCoffee; i++) waitingArea.add(new Drink(orders.get(customerName), DrinkType.Coffee));
-
+                for (int i = 0; i < numCoffee; i++) {
+                    Drink coffee = new Drink(orders.get(customerName), DrinkType.Coffee);
+                    orders.get(customerName).getDrinks().add(coffee);
+                    waitingArea.add(coffee);
+                }
                 System.out.println("Added " + numCoffee + " coffee(s) to " + customerName + "'s order");
             }
             if (numTea > 0) {
-                orders.get(customerName).addDrink(numTea, DrinkType.Tea);
-                for (int i = 0; i < numTea; i++) waitingArea.add(new Drink(orders.get(customerName), DrinkType.Tea));
-
+                for (int i = 0; i < numTea; i++) {
+                    Drink tea = new Drink(orders.get(customerName), DrinkType.Tea);
+                    orders.get(customerName).getDrinks().add(tea);
+                    waitingArea.add(tea);
+                }
                 System.out.println("Added " + numTea + " tea(s) to " + customerName + "'s order");
             }
             cafeStatusUpdate();
         } else {
             Order order = new Order(customerName, numCoffee, numTea);
-            System.out.println("Order received for " + customerName + " (" + order.orderMessage());
             orders.put(customerName, order);
             customers.put(customerName, order);
             cafeStatusUpdate();
+            System.out.println("Order received for " + customerName + " (" + order.orderMessage());
             waitingArea.addAll(order.getDrinks());
         }
     }
@@ -71,21 +68,16 @@ public class BaristaActions implements Runnable {
         return lines;
     }
 
-    public void exitCommand(String customerName) {
+    // Method for completely removing a customer from the cafe
+    public synchronized void exitCommand(String customerName) {
         orders.remove(customerName);
         customers.remove(customerName);
-        System.out.println("Order for " + customerName + " has been removed");
+        // Checking each area for customer related items and removing them
         for (int i = 0; i < waitingArea.size(); i++) {
-            if (waitingArea.get(i).getDrinkOwner().equals(customerName)) {
-                waitingArea.remove(i);
-                i--;
-            }
+            if (waitingArea.get(i).getDrinkOwner().equals(customerName)) { waitingArea.remove(i); i--; }
         }
         for (int i = 0; i < brewingArea.size(); i++) {
-            if (brewingArea.get(i).getDrinkOwner().equals(customerName)) {
-                brewingArea.remove(i);
-                i--;
-            }
+            if (brewingArea.get(i).getDrinkOwner().equals(customerName)) { brewingArea.remove(i); i--; }
         }
         for (int i = 0; i < 2; i++) {
             if (brewingCoffee[i] != null && brewingCoffee[i].getName().equals(customerName)) {
@@ -97,15 +89,13 @@ public class BaristaActions implements Runnable {
                 brewingTea[i] = null;
             }
         }
-        for (int i = 0; i < trayArea.size(); i++) {
-            if (trayArea.get(i).getDrinkOwner().equals(customerName)) {
-                trayArea.remove(i);
-                i--;
-            }
-        }
-        cafeStatusUpdate();
+        for (int i = 0; i < trayArea.size(); i++) { trayArea.remove(i); i--; }
+
+        if (customers.isEmpty()) { cafeStatusUpdate(); }
+        System.out.println("Order for " + customerName + " has been removed");
     }
 
+    // Method for printing out the current status of the cafe to server terminal
     private synchronized void cafeStatusUpdate() {
         System.out.println("\nNumber of clients in cafe: " + customers.size());
         System.out.println("Number of clients waiting for orders: " + orders.size());
@@ -119,52 +109,38 @@ public class BaristaActions implements Runnable {
             else numTea++;
         }
         status += numCoffee + " coffee(s) and " + numTea + " tea(s)";
+
         numCoffee = numTea = 0;
         for (Drink drink : brewingArea) {
             if (drink.getDrinkType() == DrinkType.Coffee) numCoffee++;
             else numTea++;
         }
         status += "\nBrewing area: " + numCoffee + " coffee(s) and " + numTea + " tea(s)";
+
         numCoffee = numTea = 0;
         for (Drink drink : trayArea) {
             if (drink.getDrinkType() == DrinkType.Coffee) numCoffee++;
             else numTea++;
         }
         status += "\nTray area: " + numCoffee + " coffee(s) and " + numTea + " tea(s)";
+
         System.out.println(status + "\n");
-    }
-
-    public Order getOrder(Order order) {
-        return order;
-    }
-
-    public List<Drink> DEBUG_trayed() {
-        List<Drink> orderList = new ArrayList<>();
-        for (Order order : orders.values()) {
-            orderList.addAll(order.getTray());
-        }
-        return orderList;
-    }
-
-    public List<Drink> DEBUG_waiting() {
-        return waitingArea;
-    }
-
-    public List<Drink> DEBUG_brewing() {
-        return brewingArea;
     }
 
     @Override
     public void run() {
         while(true) {
-            // If there are drinks in the waiting area, start brewing in respective tea or coffee areas
             synchronized(this){
+                // Waiting and brewing area handler:
+                // - If there are any drinks in the waiting area, then check if there are any free brewing threads
+                // - If there are free brewing threads, then start brewing the first drink in the waiting area
+                // - If there are no free brewing threads, then do nothing
                 if (waitingArea.size() > 0) {
                     for(int d = 0; d < waitingArea.size(); d++) {
                         Drink drink = waitingArea.get(d);
+                        // Coffee brewer
                         if (drink.getDrinkType() == DrinkType.Coffee) {
-                            // Previously used enhanced for loop, but causes concurrent modification exception due to internal iterator
-                            for (int i = 0; i < brewingCoffee.length; i++) {
+                            for (int i = 0; i < brewingCoffee.length; i++) { // Previously used enhanced "for loop", but causes concurrent modification exception due to internal iterator
                                 if (brewingCoffee[i] == null || !brewingCoffee[i].isAlive()) {
                                     brewingCoffee[i] = new Thread(drink);
                                     brewingCoffee[i].start();
@@ -177,6 +153,7 @@ public class BaristaActions implements Runnable {
                                 }
                             }
                             continue;
+                        // Tea brewer
                         } else if (drink.getDrinkType() == DrinkType.Tea) {
                             for (int i = 0; i < brewingTea.length; i++) {
                                 if (brewingTea[i] == null || !brewingTea[i].isAlive()) {
@@ -194,7 +171,9 @@ public class BaristaActions implements Runnable {
                         }
                     }
                 }
-                // Check if any of the brewing threads are done; if so, move the drink to the tray area and remove from brewing area
+                // Tray area handler:
+                // - Check for drinks in brewing area that are finished brewing
+                // - If there are any finished drinks, then add them to the tray area and remove them from brewing area
                 if (brewingArea.size() > 0) {
                     for (int i = 0; i < brewingArea.size(); i++) {
                         Drink drink = brewingArea.get(i);
@@ -206,21 +185,19 @@ public class BaristaActions implements Runnable {
                         }
                     }
                 }
-                // Check trayed area for fully completed orders. If a all drinks belonging to an order are trayed, then remove the order from the map and set completed to true
+
+                // Order completion handler:
+                // - Iterate through drinks in the tray area. To prevent concurrent modification exception, instatiating and order from data within the drink.
+                // - If the order is finished, for code reusability, call the exitCommand method to remove the customer from the cafe, but add the order back to customers map
                 if (trayArea.size() > 0) {
-                    for (int o = 0; o < orders.size(); o++) {
-                        Order order = (Order) orders.values().toArray()[o];
-                        if (orders.get(order.getCustomerName()).isComplete()) {
-                            // for (int i = 0; i < trayArea.size(); i++) {
-                            //     if (trayArea.get(i).getDrinkOwner().equals(order.getCustomerName())) {
-                            //         trayArea.remove(i);
-                            //         i--;
-                            //     }
-                            // }
-                            // orders.remove(order.getCustomerName());
+                    for (int i = 0; i < trayArea.size(); i++) {
+                        Order order = orders.get(trayArea.get(i).getDrinkOwner());
+                        if (order.isComplete()) {
                             exitCommand(order.getCustomerName());
                             customers.put(order.getCustomerName(), order);
+                            cafeStatusUpdate();
                             System.out.println("Order delivered to " + order.getCustomerName() + " (" + order.orderMessage());
+                            break;
                         }
                     }
                 }
