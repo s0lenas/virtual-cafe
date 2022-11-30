@@ -80,7 +80,6 @@ public class CustomerHandler implements Runnable {
                         case "exit":
                             barista.exitCommand(customerName);
                             socket.close();
-                            //writer.println("Goodbye");
                             return;
                     }
                 }

@@ -27,8 +27,6 @@ public class CustomerActions implements AutoCloseable {
 
     public void createOrder(int numCoffee, int numTea) {
         writer.println("ORDER " + numCoffee + " " + numTea);
-        String line = reader.nextLine();
-        System.out.println(line);
     }
 
     public String[] getOrderStatus() {

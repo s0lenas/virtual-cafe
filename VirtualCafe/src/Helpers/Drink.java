@@ -43,19 +43,6 @@ public class Drink implements Runnable {
     public DrinkStatus getDrinkStatus() {
         return drinkStatus;
     }
-
-    // public boolean isRunning() {
-    //     return !stop;
-    // }
-
-    // public void interrupt() {
-    //     stop = true;
-    //     this.interrupt();
-    // }
-    
-    // public void setBrewTime(int brewTime) {
-    //     Drink.brewTime = brewTime;
-    // }
     
     @Override
     public void run() {

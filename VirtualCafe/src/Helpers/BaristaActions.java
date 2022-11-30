@@ -34,22 +34,23 @@ public class BaristaActions implements Runnable {
 
         // If order by the customer already exists, then just add drinks to the existing order
         // otherwise create a new order
-        Order order = new Order(customerName, numCoffee, numTea);
+        //Order order = new Order(customerName, numCoffee, numTea);
         if (orders.containsKey(customerName)) {
             if (numCoffee > 0) {
                 orders.get(customerName).addDrink(numCoffee, DrinkType.Coffee);
-                for (int i = 0; i < numCoffee; i++) waitingArea.add(new Drink(order, DrinkType.Coffee));
+                for (int i = 0; i < numCoffee; i++) waitingArea.add(new Drink(orders.get(customerName), DrinkType.Coffee));
 
                 System.out.println("Added " + numCoffee + " coffee(s) to " + customerName + "'s order");
             }
             if (numTea > 0) {
                 orders.get(customerName).addDrink(numTea, DrinkType.Tea);
-                for (int i = 0; i < numTea; i++) waitingArea.add(new Drink(order, DrinkType.Tea));
+                for (int i = 0; i < numTea; i++) waitingArea.add(new Drink(orders.get(customerName), DrinkType.Tea));
 
                 System.out.println("Added " + numTea + " tea(s) to " + customerName + "'s order");
             }
             cafeStatusUpdate();
         } else {
+            Order order = new Order(customerName, numCoffee, numTea);
             System.out.println("Order received for " + customerName + " (" + order.orderMessage());
             orders.put(customerName, order);
             customers.put(customerName, order);
@@ -59,7 +60,7 @@ public class BaristaActions implements Runnable {
     }
 
     // Getting order status for a specified customer
-    public String[] orderStatus(String customerName) {
+    public synchronized String[] orderStatus(String customerName) {
         String[] lines = new String[4];
         // In case of an exception, returning a single line with a message to user.
         try { lines = orders.get(customerName).toString().split("\n");
@@ -105,7 +106,7 @@ public class BaristaActions implements Runnable {
         cafeStatusUpdate();
     }
 
-    private void cafeStatusUpdate() {
+    private synchronized void cafeStatusUpdate() {
         System.out.println("\nNumber of clients in cafe: " + customers.size());
         System.out.println("Number of clients waiting for orders: " + orders.size());
 
@@ -169,8 +170,8 @@ public class BaristaActions implements Runnable {
                                     brewingCoffee[i].start();
                                     brewingCoffee[i].setName(drink.getDrinkOwner());
                                     brewingArea.add(drink);
-                                    //System.out.println("Brewing " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                                     waitingArea.remove(drink);
+                                    d--;
                                     cafeStatusUpdate();
                                     break;
                                 }
@@ -183,8 +184,8 @@ public class BaristaActions implements Runnable {
                                     brewingTea[i].start();
                                     brewingTea[i].setName(drink.getDrinkOwner());
                                     brewingArea.add(drink);
-                                    //System.out.println("Brewing " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                                     waitingArea.remove(drink);
+                                    d--;
                                     cafeStatusUpdate();
                                     break;
                                 }
@@ -199,8 +200,8 @@ public class BaristaActions implements Runnable {
                         Drink drink = brewingArea.get(i);
                         if (drink.getDrinkStatus() == DrinkStatus.Trayed) {
                             trayArea.add(drink);
-                            //System.out.println("Trayed " + drink.getDrinkType() + " for " + drink.getOrder().getCustomerName());
                             brewingArea.remove(drink);
+                            i--;
                             cafeStatusUpdate();
                         }
                     }
@@ -210,13 +211,15 @@ public class BaristaActions implements Runnable {
                     for (int o = 0; o < orders.size(); o++) {
                         Order order = (Order) orders.values().toArray()[o];
                         if (orders.get(order.getCustomerName()).isComplete()) {
-                            for (int i = 0; i < trayArea.size(); i++) {
-                                if (trayArea.get(i).getDrinkOwner().equals(order.getCustomerName())) {
-                                    trayArea.remove(i);
-                                    i--;
-                                }
-                            }
-                            orders.remove(order.getCustomerName());
+                            // for (int i = 0; i < trayArea.size(); i++) {
+                            //     if (trayArea.get(i).getDrinkOwner().equals(order.getCustomerName())) {
+                            //         trayArea.remove(i);
+                            //         i--;
+                            //     }
+                            // }
+                            // orders.remove(order.getCustomerName());
+                            exitCommand(order.getCustomerName());
+                            customers.put(order.getCustomerName(), order);
                             System.out.println("Order delivered to " + order.getCustomerName() + " (" + order.orderMessage());
                         }
                     }

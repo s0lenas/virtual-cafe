@@ -6,15 +6,12 @@ import Helpers.CustomerActions;
 public class Customer{
     public static void main(String[] args) {
         System.out.println("Welcome to the cafe!\nEnter your name: ");
-
         try {
             Scanner input = new Scanner(System.in);
             String customerName = input.nextLine();
 
             try (CustomerActions customer = new CustomerActions(customerName)) {
                 System.out.println("Welcome, " + customerName + "!");
-
-                // thread pool executor???
 
                 while(true) {
                     System.out.println("What would you like to do? (order, pay, list, exit)");
