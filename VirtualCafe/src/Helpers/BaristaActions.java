@@ -1,6 +1,10 @@
 package Helpers;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -25,9 +29,9 @@ public class BaristaActions implements Runnable {
     private List<Drink> trayArea = new ArrayList<>();
     
     // Method for creating a new order
-    public synchronized void createOrder(String customerName, int numCoffee, int numTea) {
+    public synchronized void createOrder(String customerName, int numCoffee, int numTea, Socket socket) {
         // If order by the customer already exists, then just add drinks to the existing order
-        // otherwise create a new order.
+        // otherwise create a new order with specified customer name, number of drinks for each type, and the customer socket.
         if (orders.containsKey(customerName)) {
             if (numCoffee > 0) {
                 for (int i = 0; i < numCoffee; i++) {
@@ -47,7 +51,7 @@ public class BaristaActions implements Runnable {
             }
             cafeStatusUpdate();
         } else {
-            Order order = new Order(customerName, numCoffee, numTea);
+            Order order = new Order(customerName, numCoffee, numTea, socket);
             orders.put(customerName, order);
             customers.put(customerName, order);
             cafeStatusUpdate();
@@ -57,15 +61,16 @@ public class BaristaActions implements Runnable {
     }
 
     // Getting order status for a specified customer
-    public synchronized String[] orderStatus(String customerName) {
-        String[] lines = new String[4];
+    public synchronized List<String> orderStatus(String customerName) {
+        List<String> linesList = new ArrayList<>();
         // In case of an exception, returning a single line with a message to user.
-        try { lines = orders.get(customerName).toString().split("\n");
+        try { 
+            linesList = Arrays.asList(orders.get(customerName).toString().split("\n"));
         } catch (Exception e) { 
-            String[] error = {"No orders found for " + customerName};
-            return error; 
+            linesList.add("No orders found for " + customerName);
+            return linesList;
         }
-        return lines;
+        return linesList;
     }
 
     // Method for completely removing a customer from the cafe
@@ -96,6 +101,7 @@ public class BaristaActions implements Runnable {
     }
 
     // Method for printing out the current status of the cafe to server terminal
+    // - Counts drinks of each type in each area and appends them to string
     private synchronized void cafeStatusUpdate() {
         System.out.println("\nNumber of clients in cafe: " + customers.size());
         System.out.println("Number of clients waiting for orders: " + orders.size());
@@ -125,6 +131,18 @@ public class BaristaActions implements Runnable {
         status += "\nTray area: " + numCoffee + " coffee(s) and " + numTea + " tea(s)";
 
         System.out.println(status + "\n");
+    }
+
+    // BONUS: Method for printing a message to the customer
+    private synchronized void sendMsg(String msg, Order order) {
+        String message = "SERVER: " + msg;
+        try {
+            // Sending message to socket contained within the order
+            PrintWriter out = new PrintWriter(order.getSocket().getOutputStream(), true);
+            out.println(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -189,10 +207,12 @@ public class BaristaActions implements Runnable {
                 // Order completion handler:
                 // - Iterate through drinks in the tray area. To prevent concurrent modification exception, instatiating and order from data within the drink.
                 // - If the order is finished, for code reusability, call the exitCommand method to remove the customer from the cafe, but add the order back to customers map
+                // - BONUS: Send a message to the customer to let them know their order is ready
                 if (trayArea.size() > 0) {
                     for (int i = 0; i < trayArea.size(); i++) {
                         Order order = orders.get(trayArea.get(i).getDrinkOwner());
                         if (order.isComplete()) {
+                            sendMsg("Your order is complete!", order);
                             exitCommand(order.getCustomerName());
                             customers.put(order.getCustomerName(), order);
                             cafeStatusUpdate();

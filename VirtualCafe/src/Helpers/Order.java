@@ -1,21 +1,24 @@
 package Helpers;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Order {
 
+    private Socket socket;
     private final String customerName;
     private boolean complete;
 
     private List<Drink> drinks = new ArrayList<>();
 
-    // This is the constructor for the Order class. It takes in a customer name, and the number of
-    // coffees and teas in the order. It then creates a new drink object for each coffee and tea in the
+    // This is the constructor for the Order class. It takes in a customer name, the number of
+    // coffees and teas in the order, and a customer socket. It then creates a new drink object for each coffee and tea in the
     // order, and adds them to the drinks list.
-    public Order(String customerName, int numCoffee, int numTea) {
+    public Order(String customerName, int numCoffee, int numTea, Socket socket) {
         this.customerName = customerName;
         this.complete = false;
+        this.socket = socket;
 
         if (numCoffee > 0) {
             for (int i = 0; i < numCoffee; i++) {
@@ -31,6 +34,8 @@ public class Order {
             }
         }
     }
+
+    public Socket getSocket() { return socket; }
 
     public String getCustomerName() { return customerName; }
 

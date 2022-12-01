@@ -2,6 +2,7 @@ package Helpers;
 
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.List;
 import java.util.Scanner;
 
 public class CustomerHandler implements Runnable {
@@ -29,7 +30,6 @@ public class CustomerHandler implements Runnable {
                 // Reading customer name from the Scanner and sending a success message back to the customer.
                 customerName = scanner.nextLine();
                 System.out.println("Customer " + customerName + " has connected");
-                writer.println("success");
 
                 while(true) {
                     // Scanning for the next line from the CustomerActions class.
@@ -39,13 +39,12 @@ public class CustomerHandler implements Runnable {
                     switch (substrings[0].toLowerCase()) {
                         // "ORDER" command from the CustomerActions class.
                         case "order":
-                            barista.createOrder(customerName, Integer.parseInt(substrings[1]), Integer.parseInt(substrings[2]));
+                            barista.createOrder(customerName, Integer.parseInt(substrings[1]), Integer.parseInt(substrings[2]), socket);
                             break;
                         // "STATUS" command from the CustomerActions class.
                         case "status":
-                            String[] tempArray = barista.orderStatus(customerName);
-                            writer.println(tempArray.length);
-                            for (String s : tempArray) {
+                            List<String> tempList = barista.orderStatus(customerName);
+                            for (String s : tempList) {
                                 writer.println(s);
                             }
                             break;
