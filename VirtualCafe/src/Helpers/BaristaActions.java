@@ -49,6 +49,7 @@ public class BaristaActions implements Runnable {
                 }
                 System.out.println("Added " + numTea + " tea(s) to " + customerName + "'s order");
             }
+            sendMsg("Added " + numTea + " tea(s) and " + numCoffee + " coffee(s) to your order", orders.get(customerName));
             cafeStatusUpdate();
         } else {
             Order order = new Order(customerName, numCoffee, numTea, socket);
@@ -56,6 +57,7 @@ public class BaristaActions implements Runnable {
             customers.put(customerName, order);
             cafeStatusUpdate();
             System.out.println("Order received for " + customerName + " (" + order.orderMessage());
+            sendMsg("Created order of (" + order.orderMessage(), orders.get(customerName));
             waitingArea.addAll(order.getDrinks());
         }
     }
